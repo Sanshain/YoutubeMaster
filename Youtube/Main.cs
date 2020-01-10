@@ -32,7 +32,7 @@ namespace YoutubeFine
 
             sourcePath.Text = YoutubeLoader.Properties.Settings.Default.lastPath;
             sourcePath.GotFocus += Source_btn_GotFocus;
-            sourcePath.LostFocus += Source_btn_LostFocus;
+            sourcePath.LostFocus += Source_LostFocus;
 
             sourceText.GotFocus += SourceText_GotFocus;
         }
@@ -150,7 +150,7 @@ namespace YoutubeFine
 
         string defaulttext = "Введите название файла с данными (полный путь)";      //"Enter source path here...";
 
-        private void Source_btn_LostFocus(object sender, EventArgs e)
+        private void Source_LostFocus(object sender, EventArgs e)
         {
             if (string.IsNullOrWhiteSpace(sourcePath.Text))
             {
@@ -162,7 +162,13 @@ namespace YoutubeFine
                 if (File.Exists(sourcePath.Text))
                 {
                     sourcePath.ForeColor = Color.Black;
-                    sourceText.Text = File.ReadAllText(sourcePath.Text);
+                    var source_text = File.ReadAllText(sourcePath.Text);
+                    sourceText.Text = source_text
+                        .Replace("u'", Environment.NewLine + '"')
+                        .Replace("'", "\"")
+                        .Replace(": [", ":" + Environment.NewLine + "[")
+                        .Replace("}", Environment.NewLine + "}")
+                        .Replace("\"https", "    \"https");
                 }
                 else
                     sourcePath.ForeColor = Color.Red; 
@@ -206,7 +212,8 @@ namespace YoutubeFine
                 if (logText != null)  logText.Text += Environment.NewLine + "JSON десериализован";
             }
             catch
-            {
+            {                
+
                 robj.AddRange(source.Split('\n'));
 
                 var nsg = Environment.NewLine + " Читаем построчно (поскольку требуемый формат json не соблюден):";
@@ -231,7 +238,7 @@ namespace YoutubeFine
 
             if (!string.IsNullOrEmpty(YoutubeLoader.Properties.Settings.Default.LastVideo))
             {
-                if (sourceText.Text.IndexOf(YoutubeLoader.Properties.Settings.Default.LastVideo) > 0)
+                if (source.IndexOf(YoutubeLoader.Properties.Settings.Default.LastVideo) > 0)
                 {
                     var r =  MessageBox.Show("Указанный список уже скачивался. Нажмите ДА, чтобы продолжить" +
                         " либо НЕТ, если желаете начать сначала", "", MessageBoxButtons.YesNo);
